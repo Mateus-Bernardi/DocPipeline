@@ -1,0 +1,53 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Tabela de Usuários (para autenticação)
+model User {
+  id        String      @id @default(uuid())
+  email     String      @unique
+  password  String      // Guardaremos a senha criptografada (hash)
+  documents Document[]  // Relação: Um usuário pode ter vários documentos
+  auditLogs AuditLog[]  // Relação: Um usuário pode gerar vários logs de auditoria
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+// Representa os estados possíveis de um documento na fila
+enum DocumentStatus {
+  PENDING     // Aguardando processamento na fila
+  PROCESSING  // Sendo analisado pela IA neste exato momento
+  COMPLETED   // Processado com sucesso e dados extraídos
+  FAILED      // Ocorreu algum erro durante o processamento
+}
+
+// 2. Tabela de Documentos enviados
+model Document {
+  id            String         @id @default(uuid())
+  name          String         // Nome original do arquivo enviado pelo usuário
+  filePath      String         // Caminho temporário do arquivo no servidor
+  status        DocumentStatus @default(PENDING)
+  extractedData Json?          // Dados estruturados que a IA retornará (JSON flexível)
+  errorMessage  String?        // Caso o status seja FAILED, guardamos o motivo aqui
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  auditLogs     AuditLog[]     // Relação: Logs associados a este documento
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// 3. Tabela de Auditoria
+model AuditLog {
+  id         String    @id @default(uuid())
+  action     String    // Ex: "USER_REGISTER", "DOCUMENT_UPLOAD", "PROCESS_START", "PROCESS_SUCCESS", "PROCESS_ERROR"
+  details    String?   // Uma mensagem explicativa sobre a ação
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+}

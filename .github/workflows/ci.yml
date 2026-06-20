@@ -1,0 +1,54 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    # DEFINIÇÃO GLOBAL: Estas variáveis de ambiente estarão disponíveis para TODOS os passos abaixo
+    env:
+      DATABASE_URL: "postgresql://admin:secret_password@localhost:5432/docpipeline_db?schema=public"
+      JWT_SECRET: "chave_secreta_de_teste_ci"
+      OPENROUTER_API_KEY: "dummy_key_not_used_in_tests"
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: secret_password
+          POSTGRES_DB: docpipeline_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+
+      - name: Gerar Prisma Client
+        run: npx prisma generate
+
+      - name: Rodar Migrações do Banco
+        run: npx prisma migrate deploy
+
+      - name: Executar testes automatizados
+        run: npm run test

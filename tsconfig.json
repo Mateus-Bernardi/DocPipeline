@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022" /* Versão moderna do JavaScript */,
+    "module": "NodeNext" /* Sistema de módulos moderno */,
+    "moduleResolution": "NodeNext",
+    "rootDir": "./src" /* Pasta onde ficará nosso código fonte */,
+    "outDir": "./dist" /* Pasta onde o código compilado será gerado */,
+    "esModuleInterop": true /* Melhora a compatibilidade entre bibliotecas */,
+    "forceConsistentCasingInFileNames": true /* Evita problemas de maiúsculas/minúsculas entre SOs */,
+    "strict": true /* Ativa validações rigorosas de segurança do código */,
+    "skipLibCheck": true /* Pula checagem das pastas de bibliotecas para ser mais rápido */
+  },
+  "include": ["src/**/*"] /* Indica que o TS deve olhar apenas a pasta src */
+}
